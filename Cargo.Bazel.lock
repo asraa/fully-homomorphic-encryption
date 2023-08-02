@@ -1,5 +1,5 @@
 {
-  "checksum": "4629ecc5b3618ec5f0c0d3613777156650748c571a4277c52d755636dfd64d76",
+  "checksum": "21cd9e839e6c868b9e30efb8c18ce3b0f61d7c75f9b85b1d6bfa14616da55271",
   "crates": {
     "aes 0.8.3": {
       "name": "aes",
@@ -338,7 +338,6 @@
         "crate_features": {
           "common": [
             "default",
-            "fft128",
             "serde",
             "std"
           ],
@@ -757,7 +756,7 @@
               "target": "rayon"
             },
             {
-              "id": "tfhe 0.2.4",
+              "id": "tfhe 0.2.0",
               "target": "tfhe"
             }
           ],
@@ -1525,7 +1524,6 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "std"
           ],
           "selects": {}
@@ -1970,13 +1968,22 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "tfhe 0.2.4": {
+    "tfhe 0.2.0": {
       "name": "tfhe",
-      "version": "0.2.4",
+      "version": "0.2.0",
       "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/tfhe/0.2.4/download",
-          "sha256": "f3190f4b71a71fb8d751313b9d7a5a9b1d439fdf8faedb416999cb82fce5500e"
+        "Git": {
+          "remote": "https://github.com/zama-ai/tfhe-rs.git",
+          "commitish": {
+            "Rev": "b8e64377fa160bc67b86ce6d63abba10ed296687"
+          },
+          "strip_prefix": "tfhe",
+          "patch_args": [
+            "-p1"
+          ],
+          "patches": [
+            "@//patches:tfhers.patch"
+          ]
         }
       },
       "targets": [
@@ -2007,6 +2014,7 @@
         "crate_features": {
           "common": [
             "boolean",
+            "fpga",
             "generator_x86_64_aesni",
             "seeder_unix",
             "seeder_x86_64_rdseed",
@@ -2047,10 +2055,6 @@
               "target": "once_cell"
             },
             {
-              "id": "pulp 0.11.11",
-              "target": "pulp"
-            },
-            {
               "id": "rayon 1.7.0",
               "target": "rayon"
             },
@@ -2059,7 +2063,7 @@
               "target": "serde"
             },
             {
-              "id": "tfhe 0.2.4",
+              "id": "tfhe 0.2.0",
               "target": "build_script_build"
             }
           ],
@@ -2075,7 +2079,7 @@
           ],
           "selects": {}
         },
-        "version": "0.2.4"
+        "version": "0.2.0"
       },
       "build_script_attrs": {
         "data_glob": [

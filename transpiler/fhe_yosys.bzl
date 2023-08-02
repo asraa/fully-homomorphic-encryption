@@ -43,6 +43,23 @@ VALID_LUT_SIZES = {
     "xls": [0],
 }
 
+_FPGA_TECHMAP_SCRIPT = "//transpiler/yosys:map_inv_to_xor.v"
+
+_YOSYS_SCRIPT_TEMPLATE_FPGA = """cat>{script}<<EOF
+read_verilog {verilog}
+hierarchy -check -top $(cat {entry})
+proc
+memory
+techmap; opt
+abc -liberty {cell_library}
+techmap -map {fpga_techmap}
+opt_clean -purge
+clean
+write_verilog {netlist_path}
+show -format dot -prefix {netlist_path} -viewer touch
+EOF
+"""
+
 _YOSYS_SCRIPT_TEMPLATE_NO_LUT = """cat>{script}<<EOF
 read_verilog {verilog}
 hierarchy -check -top $(cat {entry})
@@ -162,6 +179,18 @@ _verilog_to_netlist = rule(
             """,
             allow_single_file = [".v"],
         ),
+        "fpga": attr.bool(
+            doc = """
+            Whether to compile for FPGAs that only support 2-input boolean gates.
+            """,
+            default = False,
+        ),
+        "fpga_script": attr.label(
+            doc = """
+            A verilog techmap script for converting unary boolean gates to 2-input gates.
+            """,
+            allow_single_file = [".v"],
+        ),
         "_netlist_analyzer": attr.label(
             default = Label(_NETLIST_ANALYZER),
             executable = True,
@@ -172,7 +201,7 @@ _verilog_to_netlist = rule(
     },
 )
 
-def verilog_to_netlist(name, src, encryption, cell_library = None, lut_size = 0):
+def verilog_to_netlist(name, src, encryption, cell_library = None, lut_size = 0, fpga = False):
     cell_library = cell_library or FHE_ENCRYPTION_SCHEMES[encryption]
     if encryption in FHE_ENCRYPTION_SCHEMES:
         _verilog_to_netlist(
@@ -180,9 +209,12 @@ def verilog_to_netlist(name, src, encryption, cell_library = None, lut_size = 0)
             src = src,
             encryption = encryption,
             cell_library = cell_library,
+            fpga = fpga,
             lut_size = lut_size,
             # unused if lut_size is not set
             lutmap_script = _LUT_TO_LUTMUX_SCRIPTS[lut_size],
+            # unused if fpga is not set
+            fpga_script = _FPGA_TECHMAP_SCRIPT,
         )
     else:
         fail("Invalid encryption value:", encryption)
@@ -203,13 +235,23 @@ def _generate_yosys_script(ctx, stem, verilog, netlist_path, entry):
             verilog = verilog.path,
         )
     else:
-        sh_cmd = _YOSYS_SCRIPT_TEMPLATE_NO_LUT.format(
-            script = ys_script.path,
-            verilog = verilog.path,
-            entry = entry.path,
-            cell_library = ctx.file.cell_library.path,
-            netlist_path = netlist_path,
-        )
+        if ctx.attr.fpga:
+            sh_cmd = _YOSYS_SCRIPT_TEMPLATE_FPGA.format(
+                script = ys_script.path,
+                verilog = verilog.path,
+                entry = entry.path,
+                cell_library = ctx.file.cell_library.path,
+                fpga_techmap = ctx.file.fpga_script.path,
+                netlist_path = netlist_path,
+            )
+        else:
+            sh_cmd = _YOSYS_SCRIPT_TEMPLATE_NO_LUT.format(
+                script = ys_script.path,
+                verilog = verilog.path,
+                entry = entry.path,
+                cell_library = ctx.file.cell_library.path,
+                netlist_path = netlist_path,
+            )
 
     ctx.actions.run_shell(
         inputs = [entry],
@@ -259,6 +301,7 @@ def _generate_netlist(ctx, stem, verilog, entry):
         tools = [
             ctx.file.cell_library,
             ctx.file.lutmap_script,
+            ctx.file.fpga_script,
             ctx.executable._abc,
         ],
         env = {

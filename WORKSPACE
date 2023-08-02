@@ -193,6 +193,13 @@ crates_repository(
     name = "crate_index",
     cargo_lockfile = "//:Cargo.lock",
     lockfile = "//:Cargo.Bazel.lock",
+    annotations = {
+        "tfhe": [crate.annotation(
+            patch_args = ["-p1"],
+            patches = ["@//patches:tfhers.patch"],
+            crate_features = ["fpga"],
+        )],
+    },
     packages = {
         "tfhe": crate.spec(
             features = [
@@ -200,7 +207,8 @@ crates_repository(
                 "shortint",
                 "x86_64-unix",
             ],
-            version = "0.2.4",
+            git = "https://github.com/zama-ai/tfhe-rs.git",
+            rev = "b8e64377fa160bc67b86ce6d63abba10ed296687",
         ),
         "rayon": crate.spec(
             version = "1.7.0",

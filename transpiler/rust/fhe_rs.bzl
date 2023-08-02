@@ -7,6 +7,7 @@ load(
     "BooleanifiedIrOutputInfo",
     "LUT_CELLS_LIBERTY",
     "TFHERS_CELLS_LIBERTY",
+    "FPGA_CELLS_LIBERTY",
     "executable_attr",
 )
 load(
@@ -170,6 +171,7 @@ def fhe_rust_library(
         src,
         hdrs,
         optimizer = "yosys",
+        fpga = False,
         generated_rust_file_name = None,
         lut_size = 3,
         parallelism = 0,
@@ -217,6 +219,12 @@ def fhe_rust_library(
     if lut_size > 0 and lut_size != 3:
         fail("Only lut_size=3 is supported")
 
+    if fpga and lut_size > 0:
+        fail("fpga compilation does not support lut size")
+
+    if fpga and (parallelism == 0 or parallelism > 16):
+        fail("fpga compilation requires bounded parallelism less than 16")
+
     rust_file_name = generated_rust_file_name or name
     transpiled_xlscc_files = "{}.cc_to_xls_ir".format(name)
     cc_to_xls_ir(
@@ -238,6 +246,9 @@ def fhe_rust_library(
     if lut_size > 0:
         cell_library = LUT_CELLS_LIBERTY
         rustc_flags = ["--cfg", "lut"]
+    if fpga:
+        cell_library = FPGA_CELLS_LIBERTY
+        rustc_flags = ["--cfg", "fpga"]
 
     verilog_to_netlist(
         name = netlist,
@@ -245,6 +256,7 @@ def fhe_rust_library(
         encryption = "tfhe-rs",
         lut_size = lut_size,
         cell_library = cell_library,
+        fpga = fpga,
     )
     rust_codegen(
         name = name,

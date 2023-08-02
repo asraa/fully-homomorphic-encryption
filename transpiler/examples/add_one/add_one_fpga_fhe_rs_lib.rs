@@ -1,15 +1,4 @@
-#ifndef FULLY_HOMOMORPHIC_ENCRYPTION_TRANSPILER_RUST_TFHE_RS_TEMPLATES_H_
-#define FULLY_HOMOMORPHIC_ENCRYPTION_TRANSPILER_RUST_TFHE_RS_TEMPLATES_H_
 
-#include "absl/strings/string_view.h"
-
-namespace fhe {
-namespace rust {
-namespace transpiler {
-
-// Constants used for string templating, these are placed here so the tests
-// can reuse them.
-constexpr absl::string_view kCodegenTemplate = R"rust(
 use rayon::prelude::*;
 use std::collections::HashMap;
 
@@ -70,7 +59,50 @@ enum CellType {
 
 use CellType::*;
 
-$gate_levels
+
+static LEVEL_0: [((usize, bool, CellType), &[GateInput]); 1] = [
+    ((0, false, AND2), &[Arg(0, 0), Arg(0, 1)]),
+];
+
+static LEVEL_1: [((usize, bool, CellType), &[GateInput]); 1] = [
+    ((1, false, AND2), &[Arg(0, 2), Tv(0)]),
+];
+
+static LEVEL_2: [((usize, bool, CellType), &[GateInput]); 1] = [
+    ((2, false, AND2), &[Arg(0, 3), Tv(1)]),
+];
+
+static LEVEL_3: [((usize, bool, CellType), &[GateInput]); 1] = [
+    ((3, false, AND2), &[Arg(0, 4), Tv(2)]),
+];
+
+static LEVEL_4: [((usize, bool, CellType), &[GateInput]); 1] = [
+    ((4, false, AND2), &[Arg(0, 5), Tv(3)]),
+];
+
+static LEVEL_5: [((usize, bool, CellType), &[GateInput]); 1] = [
+    ((5, false, AND2), &[Arg(0, 6), Tv(4)]),
+];
+
+static LEVEL_6: [((usize, bool, CellType), &[GateInput]); 8] = [
+    ((0, true, XOR2), &[Arg(0, 0), Cst(true)]),
+    ((1, true, XOR2), &[Arg(0, 0), Arg(0, 1)]),
+    ((2, true, XOR2), &[Arg(0, 2), Tv(0)]),
+    ((3, true, XOR2), &[Arg(0, 3), Tv(1)]),
+    ((4, true, XOR2), &[Arg(0, 4), Tv(2)]),
+    ((5, true, XOR2), &[Arg(0, 5), Tv(3)]),
+    ((6, true, XOR2), &[Arg(0, 6), Tv(4)]),
+    ((7, true, XOR2), &[Arg(0, 7), Tv(5)]),
+];
+
+static PRUNE_6: [usize; 6] = [
+  4,
+  0,
+  3,
+  2,
+  5,
+  1,
+];
 
 fn prune(temp_nodes: &mut HashMap<usize, Ciphertext>, temp_node_ids: &[usize]) {
   for x in temp_node_ids {
@@ -78,7 +110,7 @@ fn prune(temp_nodes: &mut HashMap<usize, Ciphertext>, temp_node_ids: &[usize]) {
   }
 }
 
-pub fn $function_signature {
+pub fn add_one(x: &Vec<Ciphertext>, server_key: &ServerKey) -> Vec<Ciphertext> {
     #[cfg(lut)]
     let (constant_false, constant_true): (Ciphertext, Ciphertext) = (
       server_key.create_trivial(0), server_key.create_trivial(1));
@@ -86,12 +118,12 @@ pub fn $function_signature {
     let (constant_false, constant_true): (Ciphertext, Ciphertext) = (
       server_key.trivial_encrypt(false), server_key.trivial_encrypt(true));
 
-    let args: &[&Vec<Ciphertext>] = &[$ordered_params];
+    let args: &[&Vec<Ciphertext>] = &[x];
 
     #[cfg(lut)]
     let luts = {
         let mut luts: HashMap<u64, shortint::server_key::LookupTableOwned> = HashMap::new();
-        const LUTS_AS_INTS: [u64; $num_luts] = [$comma_separated_luts];
+        const LUTS_AS_INTS: [u64; 0] = [];
         for lut_as_int in LUTS_AS_INTS {
             luts.insert(lut_as_int, generate_lut(lut_as_int, server_key));
         }
@@ -107,8 +139,8 @@ pub fn $function_signature {
     };
 
     let mut temp_nodes = HashMap::new();
-    let mut $output_stem = Vec::new();
-    $output_stem.resize($num_outputs, constant_false.clone());
+    let mut out = Vec::new();
+    out.resize(8, constant_false.clone());
 
     #[cfg(not(fpga))]
     let mut run_level = |
@@ -125,7 +157,7 @@ pub fn $function_signature {
                     Cst(true) => &constant_true,
                     Arg(pos, ndx) => &args[*pos][*ndx],
                     Tv(ndx) => &temp_nodes[ndx],
-                    Output(ndx) => &$output_stem[*ndx],
+                    Output(ndx) => &out[*ndx],
                   }).collect::<Vec<_>>();
                 #[cfg(lut)]
                 let gate_func = |args: &[&Ciphertext]| match celltype {
@@ -148,7 +180,7 @@ pub fn $function_signature {
         updates.into_iter().for_each(|(k, v)| {
             let (index, is_output) = k;
             if is_output {
-                $output_stem[index] = v;
+                out[index] = v;
             } else {
                 temp_nodes.insert(index, v);
             }
@@ -175,7 +207,7 @@ pub fn $function_signature {
                     Cst(true) => &constant_true,
                     Arg(pos, ndx) => &args[*pos][*ndx],
                     Tv(ndx) => &temp_nodes[ndx],
-                    Output(ndx) => &$output_stem[*ndx],
+                    Output(ndx) => &out[*ndx],
                   }).collect::<Vec<_>>();
                 // Note: Only 2-input boolean gates are supported.
                 cts_left.push(*task_args[0]);
@@ -198,111 +230,23 @@ pub fn $function_signature {
         updates.iter().enumerate().for_each(|(i, k)| {
             let (index, is_output) = *k;
             if is_output {
-                $output_stem[index] = cts_res[i];
+                out[index] = cts_res[i];
             } else {
                 temp_nodes.insert(index, cts_res[i]);
             }
         });
     };
 
-$run_level_ops
+    run_level(&mut temp_nodes, &LEVEL_0);
+    run_level(&mut temp_nodes, &LEVEL_1);
+    run_level(&mut temp_nodes, &LEVEL_2);
+    run_level(&mut temp_nodes, &LEVEL_3);
+    run_level(&mut temp_nodes, &LEVEL_4);
+    run_level(&mut temp_nodes, &LEVEL_5);
+    run_level(&mut temp_nodes, &LEVEL_6);
+    prune(&mut temp_nodes, &PRUNE_6);
 
-$output_assignment_block
 
-    $return_statement
+
+    out
 }
-)rust";
-
-// The data of a level's gate ops must be defined statically, or else the
-// rustc (LLVM) optimizing passes will take forever.
-//
-// e.g.,
-//
-//   const LEVEL_3: [((usize, bool, CellType), &[GateInput]); 8] = [
-//       ((1, true, LUT3(6)), &[Arg(0, 0), Arg(0, 1), Cst(false)]),
-//       ((2, true, LUT3(120)), &[Arg(0, 0), Arg(0, 1), Arg(0, 2)]),
-//       ...
-//   ];
-//
-constexpr absl::string_view kLevelTemplate = R"rust(
-static LEVEL_%d: [((usize, bool, CellType), &[GateInput]); %d] = [
-%s
-];)rust";
-
-// The data specifying, for each LEVEL_K, the set of gate output ids
-// that can be safely deleted from memory after LEVEL_K is run.
-constexpr absl::string_view kPruneTemplate = R"rust(
-static PRUNE_%d: [usize; %d] = [
-%s
-];)rust";
-
-// A single gate operation defined as constant data
-//
-//   ((output_id, is_output, LUT3(lut_defn)), &[arglist]),
-//
-// e.g.,
-//
-//   ((2, false, LUT3(120)), &[Arg(0, 0), Arg(0, 1), Arg(0, 2)]),
-// or
-//   ((2, false, AND), &[Arg(0, 0), Arg(0, 1), Arg(0, 2)]),
-//
-constexpr absl::string_view kTaskTemplate = "    ((%d, %s, %s), &[%s]),";
-
-// The commands used to run the levels defined by kLevelTemplate above.
-//
-// e.g.,
-//
-//  run_level(&LEVEL_0);
-//  run_level(&LEVEL_1);
-//  ...
-//
-constexpr absl::string_view kRunLevelTemplate =
-    "    run_level(&mut temp_nodes, &LEVEL_%d);";
-
-// The commands used to clean up old temp_nodes values that are no longer
-// needed. Necessary for large programs with 1M or more gates to conserve RAM.
-//
-// e.g.,
-//
-//  run_level(&LEVEL_0);
-//  prune(&PRUNE_0);
-//  run_level(&LEVEL_1);
-//  prune(&PRUNE_1);
-//  ...
-//
-constexpr absl::string_view kRunPruneTemplate =
-    "    prune(&mut temp_nodes, &PRUNE_%d);";
-
-// This is needed for the output section of a program,
-// when the output values from the yosys netlist must be split off into multiple
-// output values for the caller of the code-genned function.
-//
-// e.g., the following writes the first 16 bits of `out` to an outparameter,
-// then returns the remaining bits.
-//
-//     outputValue[0] = out[0].clone();
-//     outputValue[1] = out[1].clone();
-//     outputValue[2] = out[2].clone();
-//     outputValue[3] = out[3].clone();
-//     outputValue[4] = out[4].clone();
-//     outputValue[5] = out[5].clone();
-//     outputValue[6] = out[6].clone();
-//     outputValue[7] = out[7].clone();
-//     outputValue[8] = out[8].clone();
-//     outputValue[9] = out[9].clone();
-//     outputValue[10] = out[10].clone();
-//     outputValue[11] = out[11].clone();
-//     outputValue[12] = out[12].clone();
-//     outputValue[13] = out[13].clone();
-//     outputValue[14] = out[14].clone();
-//     outputValue[15] = out[15].clone();
-//     out = out.split_off(16);
-//
-constexpr absl::string_view kAssignmentTemplate = "    %s[%d] = %s.clone();";
-constexpr absl::string_view kSplitTemplate = "    %s = %s.split_off(%d);";
-
-}  // namespace transpiler
-}  // namespace rust
-}  // namespace fhe
-
-#endif  // FULLY_HOMOMORPHIC_ENCRYPTION_TRANSPILER_RUST_TFHE_RS_TEMPLATES_H_

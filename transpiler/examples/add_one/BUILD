@@ -57,6 +57,15 @@ rust_test(
     ],
 )
 
+fhe_rust_library(
+    name = "add_one_fpga_fhe_rs_lib",
+    src = "add_one.cc",
+    hdrs = ["add_one.h"],
+    lut_size = 0,
+    parallelism = 16,
+    fpga = True,
+)
+
 fhe_py_library(
     name = "add_one_fhe_py_lib",
     src = "add_one.cc",

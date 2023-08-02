@@ -346,9 +346,8 @@ dependencies = [
 
 [[package]]
 name = "tfhe"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3190f4b71a71fb8d751313b9d7a5a9b1d439fdf8faedb416999cb82fce5500e"
+version = "0.2.0"
+source = "git+https://github.com/zama-ai/tfhe-rs.git?rev=b8e64377fa160bc67b86ce6d63abba10ed296687#b8e64377fa160bc67b86ce6d63abba10ed296687"
 dependencies = [
  "aligned-vec",
  "bytemuck",
@@ -358,7 +357,6 @@ dependencies = [
  "itertools",
  "once_cell",
  "paste",
- "pulp",
  "rayon",
  "serde",
 ]

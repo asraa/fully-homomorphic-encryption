@@ -18,6 +18,7 @@ TFHE_CELLS_LIBERTY = "//transpiler/yosys:tfhe_cells.liberty"
 TFHERS_CELLS_LIBERTY = "//transpiler/yosys:tfhe-rs_cells.liberty"
 OPENFHE_CELLS_LIBERTY = "//transpiler/yosys:openfhe_cells.liberty"
 LUT_CELLS_LIBERTY = "//transpiler/yosys:lut_cells.liberty"
+FPGA_CELLS_LIBERTY = "//transpiler/yosys:fpga_cells.liberty"
 
 FHE_ENCRYPTION_SCHEMES = {
     "cleartext": TFHE_CELLS_LIBERTY,
