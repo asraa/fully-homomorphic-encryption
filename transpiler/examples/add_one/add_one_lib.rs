@@ -36,7 +36,9 @@ mod tests {
     use super::*;
     #[cfg(lut)]
     use add_one_fhe_rs_lib::add_one;
-    #[cfg(not(lut))]
+    #[cfg(fpga)]
+    use add_one_fpga_fhe_rs_lib::add_one;
+    #[cfg(not(any(lut, fpga)))]
     use add_one_gate_fhe_rs_lib::add_one;
     #[cfg(lut)]
     use tfhe::shortint::parameters::PARAM_MESSAGE_1_CARRY_2;

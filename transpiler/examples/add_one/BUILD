@@ -27,6 +27,15 @@ rust_library(
     ],
 )
 
+rust_test(
+    name = "add_one_rs_test",
+    crate = ":add_one_rs_lib",
+    rustc_flags = [
+        "--cfg",
+        "lut",
+    ],
+)
+
 fhe_rust_library(
     name = "add_one_gate_fhe_rs_lib",
     src = "add_one.cc",
@@ -48,15 +57,6 @@ rust_test(
     crate = ":add_one_gate_rs_lib",
 )
 
-rust_test(
-    name = "add_one_rs_test",
-    crate = ":add_one_rs_lib",
-    rustc_flags = [
-        "--cfg",
-        "lut",
-    ],
-)
-
 fhe_rust_library(
     name = "add_one_fpga_fhe_rs_lib",
     src = "add_one.cc",
@@ -64,6 +64,28 @@ fhe_rust_library(
     lut_size = 0,
     parallelism = 16,
     fpga = True,
+)
+
+rust_library(
+    name = "add_one_fpga_rs_lib",
+    srcs = ["add_one_lib.rs"],
+    deps = [
+        ":add_one_fpga_fhe_rs_lib",
+        "@crate_index//:tfhe",
+    ],
+    rustc_flags = [
+        "--cfg",
+        "fpga",
+    ],
+)
+
+rust_test(
+    name = "add_one_fpga_rs_test",
+    crate = ":add_one_fpga_rs_lib",
+    rustc_flags = [
+        "--cfg",
+        "fpga",
+    ],
 )
 
 fhe_py_library(

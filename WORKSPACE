@@ -193,22 +193,26 @@ crates_repository(
     name = "crate_index",
     cargo_lockfile = "//:Cargo.lock",
     lockfile = "//:Cargo.Bazel.lock",
-    annotations = {
-        "tfhe": [crate.annotation(
-            patch_args = ["-p1"],
-            patches = ["@//patches:tfhers.patch"],
-            crate_features = ["fpga"],
-        )],
-    },
+    # annotations = {
+    #     "tfhe": [crate.annotation(
+    #         patch_args = ["-p1"],
+    #         patches = ["@//patches:tfhers.patch"],
+    #         crate_features = ["fpga"],
+    #         rustc_flags = ["--cfg", "fpga"],
+    #     )],
+    # },
     packages = {
         "tfhe": crate.spec(
             features = [
                 "boolean",
                 "shortint",
                 "x86_64-unix",
+                "fpga",
             ],
-            git = "https://github.com/zama-ai/tfhe-rs.git",
-            rev = "b8e64377fa160bc67b86ce6d63abba10ed296687",
+            # git = "https://github.com/zama-ai/tfhe-rs.git",
+            git = "ssh://git@github.com/mvanbeirendonck/tfhe-rs-cosic-google.git",
+            branch = "main",
+            # rev = "b8e64377fa160bc67b86ce6d63abba10ed296687",
         ),
         "rayon": crate.spec(
             version = "1.7.0",

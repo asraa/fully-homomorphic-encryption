@@ -178,8 +178,8 @@ pub fn $function_signature {
                     Output(ndx) => &$output_stem[*ndx],
                   }).collect::<Vec<_>>();
                 // Note: Only 2-input boolean gates are supported.
-                cts_left.push(*task_args[0]);
-                cts_right.push(*task_args[1]);
+                cts_left.push(task_args[0].clone());
+                cts_right.push(task_args[1].clone());
                 let gate_func = match celltype {
                   AND2 => Gate::AND,
                   OR2 => Gate::OR,
@@ -198,9 +198,9 @@ pub fn $function_signature {
         updates.iter().enumerate().for_each(|(i, k)| {
             let (index, is_output) = *k;
             if is_output {
-                $output_stem[index] = cts_res[i];
+                $output_stem[index] = cts_res[i].clone();
             } else {
-                temp_nodes.insert(index, cts_res[i]);
+                temp_nodes.insert(index, cts_res[i].clone());
             }
         });
     };

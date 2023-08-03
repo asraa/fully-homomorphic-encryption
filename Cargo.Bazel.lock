@@ -1,5 +1,5 @@
 {
-  "checksum": "21cd9e839e6c868b9e30efb8c18ce3b0f61d7c75f9b85b1d6bfa14616da55271",
+  "checksum": "cf0c21dded0b6b3f601bdf3fd382cce9581f898fdfa78256b1185dc850deb07c",
   "crates": {
     "aes 0.8.3": {
       "name": "aes",
@@ -1973,17 +1973,11 @@
       "version": "0.2.0",
       "repository": {
         "Git": {
-          "remote": "https://github.com/zama-ai/tfhe-rs.git",
+          "remote": "ssh://git@github.com/mvanbeirendonck/tfhe-rs-cosic-google.git",
           "commitish": {
-            "Rev": "b8e64377fa160bc67b86ce6d63abba10ed296687"
+            "Branch": "main"
           },
-          "strip_prefix": "tfhe",
-          "patch_args": [
-            "-p1"
-          ],
-          "patches": [
-            "@//patches:tfhers.patch"
-          ]
+          "strip_prefix": "tfhe"
         }
       },
       "targets": [

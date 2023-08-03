@@ -347,7 +347,7 @@ dependencies = [
 [[package]]
 name = "tfhe"
 version = "0.2.0"
-source = "git+https://github.com/zama-ai/tfhe-rs.git?rev=b8e64377fa160bc67b86ce6d63abba10ed296687#b8e64377fa160bc67b86ce6d63abba10ed296687"
+source = "git+ssh://git@github.com/mvanbeirendonck/tfhe-rs-cosic-google.git?branch=main#a407367ed4278d580b1d59ba040b78269d68f7f6"
 dependencies = [
  "aligned-vec",
  "bytemuck",
