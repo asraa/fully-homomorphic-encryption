@@ -97,11 +97,11 @@ static LEVEL_6: [((usize, bool, CellType), &[GateInput]); 8] = [
 
 static PRUNE_6: [usize; 6] = [
   4,
+  5,
+  1,
   0,
   3,
   2,
-  5,
-  1,
 ];
 
 fn prune(temp_nodes: &mut HashMap<usize, Ciphertext>, temp_node_ids: &[usize]) {
@@ -210,8 +210,8 @@ pub fn add_one(x: &Vec<Ciphertext>, server_key: &ServerKey) -> Vec<Ciphertext> {
                     Output(ndx) => &out[*ndx],
                   }).collect::<Vec<_>>();
                 // Note: Only 2-input boolean gates are supported.
-                cts_left.push(*task_args[0]);
-                cts_right.push(*task_args[1]);
+                cts_left.push(task_args[0].clone());
+                cts_right.push(task_args[1].clone());
                 let gate_func = match celltype {
                   AND2 => Gate::AND,
                   OR2 => Gate::OR,
@@ -230,9 +230,9 @@ pub fn add_one(x: &Vec<Ciphertext>, server_key: &ServerKey) -> Vec<Ciphertext> {
         updates.iter().enumerate().for_each(|(i, k)| {
             let (index, is_output) = *k;
             if is_output {
-                out[index] = cts_res[i];
+                out[index] = cts_res[i].clone();
             } else {
-                temp_nodes.insert(index, cts_res[i]);
+                temp_nodes.insert(index, cts_res[i].clone());
             }
         });
     };
